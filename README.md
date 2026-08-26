@@ -8,8 +8,8 @@
 ## インストール
 
 Windows 向けには GitHub Releases に単体実行ファイル（zip）がある。展開して
-`transcriber-whisper.exe` を実行すれば Python も uv も要らない。CUDA ランタイム込みで
-約 2GB になる。
+`transcriber-whisper.exe` を実行すれば Python も uv も要らない。CUDA ランタイムを
+同梱しているため zip で約 1.4GB、展開後は約 2.2GB になる。
 
 ソースから使う場合:
 
@@ -88,6 +88,9 @@ uv run --with "nuitka>=4.1.3" python -m nuitka --standalone \
   --include-raw-dir=.venv/Lib/site-packages/nvidia=nvidia \
   src/transcriber_whisper/__main__.py
 ```
+
+Nuitka 4.1.3 の Python 3.14 対応は実験的扱いで、ビルド時に警告が出る。
+4.2 で正式対応になる予定。
 
 ## サードパーティライセンス
 
