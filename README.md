@@ -14,6 +14,10 @@ uv sync
 ffmpeg のインストールは不要（音声デコードは PyAV 経由で行われる）。
 mp3 / wav / m4a / flac などが扱える。
 
+CUDA Toolkit のインストールも不要。GPU 実行に必要な cuBLAS 12 と cuDNN 9 は
+`nvidia-cublas-cu12` / `nvidia-cudnn-cu12` として依存に含めてあり、`uv sync` で入る
+（このため初回の `uv sync` は約 1.2GB をダウンロードする）。
+
 ## 使い方
 
 ```bash
@@ -54,7 +58,11 @@ uv run transcriber-whisper unknown.m4a out.md --language auto
 
 - **初回実行時にモデルをダウンロードする。** HuggingFace のキャッシュへ保存され
   （`large-v3-turbo` で約 1.6GB）、2 回目以降はダウンロードされない。
-- **GPU は自動で使われる。** CUDA が利用可能な環境なら `device="auto"` により GPU で動作し、
+- **GPU は自動で使われる。** NVIDIA GPU があれば `device="auto"` により GPU で動作し、
   なければ CPU にフォールバックする。
+- **CUDA ランタイムは同梱している。** ctranslate2 は `cublas64_12.dll` と `cudnn64_9.dll` を
+  OS のローダー経由で解決するため、`transcriber_whisper/__init__.py` が
+  `site-packages/nvidia/*/bin` を DLL 検索パスへ登録してから faster-whisper を import する。
+  システム側の CUDA Toolkit には依存しない。
 - 既定モデルを `large-v3-turbo` にしているのは、`large-v3` が CPU では極端に遅い一方、
   turbo は日本語でも実用精度を保ったまま数倍速いため。精度が必要なときだけ `--model large-v3` を指定する。
