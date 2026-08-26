@@ -1,0 +1,48 @@
+name: third-party-notices
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - pyproject.toml
+      - uv.lock
+      - scripts/generate_third_party_notices.py
+      - .github/workflows/third_party_notices.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# Serialize so two pushes cannot race on committing the same file.
+concurrency: third-party-notices
+
+jobs:
+  update:
+    # Same platform as the release artifact: the resolved dependency set,
+    # and therefore the notices, is platform dependent.
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: astral-sh/setup-uv@v10.0.1
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --locked
+
+      - name: Regenerate notices
+        run: uv run --script scripts/generate_third_party_notices.py
+
+      - name: Commit
+        shell: bash
+        run: |
+          if git diff --quiet -- third_party_notices.md; then
+            echo "third_party_notices.md is up to date"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "docs: update third-party notices" -- third_party_notices.md
+          git push
