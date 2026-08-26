@@ -1,0 +1,68 @@
+name: build
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  ARTIFACT_NAME: transcriber-whisper-windows-x64
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: astral-sh/setup-uv@v10.0.1
+        with:
+          enable-cache: true
+
+      # Pulls the bundled CUDA runtime as well, so this is roughly 2GB.
+      - name: Install dependencies
+        run: uv sync --locked
+
+      # The CUDA runtime is copied verbatim: `nvidia` is a namespace package
+      # holding only DLLs, which the standalone import scan cannot discover.
+      - name: Compile with Nuitka
+        run: >
+          uv run --with "nuitka>=4.2" python -m nuitka
+          --standalone
+          --assume-yes-for-downloads
+          --msvc=latest
+          --output-dir=build
+          --output-filename=transcriber-whisper.exe
+          --include-package-data=faster_whisper
+          --include-data-dir=.venv/Lib/site-packages/nvidia=nvidia
+          src/transcriber_whisper/__main__.py
+
+      - name: Locate the standalone directory
+        shell: bash
+        run: echo "DIST_DIR=$(ls -d build/*.dist | head -n 1)" >> "$GITHUB_ENV"
+
+      # Also covers the CUDA DLL registration done at package import time.
+      - name: Smoke test
+        run: & "$env:DIST_DIR\transcriber-whisper.exe" --help
+
+      - name: Package
+        run: 7z a -tzip "${{ env.ARTIFACT_NAME }}.zip" "$env:DIST_DIR\*"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+          path: ${{ env.ARTIFACT_NAME }}.zip
+          compression-level: 0
+
+      - name: Attach to release
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          gh release view "$TAG" >/dev/null 2>&1 || gh release create "$TAG" --verify-tag --generate-notes
+          gh release upload "$TAG" "$ARTIFACT_NAME.zip" --clobber
