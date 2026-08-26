@@ -46,7 +46,8 @@ jobs:
 
       # Also covers the CUDA DLL registration done at package import time.
       - name: Smoke test
-        run: & "$env:DIST_DIR\transcriber-whisper.exe" --help
+        run: |
+          & "$env:DIST_DIR\transcriber-whisper.exe" --help
 
       - name: Package
         run: 7z a -tzip "${{ env.ARTIFACT_NAME }}.zip" "$env:DIST_DIR\*"
