@@ -1,0 +1,16 @@
+[project]
+name = "transcriber-whisper"
+version = "0.1.0"
+description = "Transcribe audio files into Markdown with faster-whisper"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "faster-whisper>=1.2.1",
+]
+
+[project.scripts]
+transcriber-whisper = "transcriber_whisper.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
