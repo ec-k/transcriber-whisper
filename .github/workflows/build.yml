@@ -30,7 +30,7 @@ jobs:
       # holding only DLLs, which the standalone import scan cannot discover.
       - name: Compile with Nuitka
         run: >
-          uv run --with "nuitka>=4.2" python -m nuitka
+          uv run --with "nuitka>=4.1.3" python -m nuitka
           --standalone
           --assume-yes-for-downloads
           --msvc=latest

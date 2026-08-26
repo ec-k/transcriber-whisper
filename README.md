@@ -81,7 +81,7 @@ Windows 向けの standalone バイナリを作り、Release に zip を添付�
 
 ```bash
 uv sync
-uv run --with "nuitka>=4.2" python -m nuitka --standalone \
+uv run --with "nuitka>=4.1.3" python -m nuitka --standalone \
   --output-dir=build --output-filename=transcriber-whisper.exe \
   --include-package-data=faster_whisper \
   --include-data-dir=.venv/Lib/site-packages/nvidia=nvidia \
